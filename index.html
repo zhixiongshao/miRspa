@@ -1,9 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hello World</title>
+    <meta charset="UTF-8">
+    <title>Hello Interaction</title>
 </head>
 <body>
-    <h1>Hello World</h1>
+
+<h2>输入 hello，系统会回复 hello</h2>
+
+<input type="text" id="userInput" placeholder="请输入 hello">
+<button onclick="reply()">发送</button>
+
+<p id="response"></p>
+
+<script>
+function reply() {
+    var input = document.getElementById("userInput").value;
+
+    if (input === "hello") {
+        document.getElementById("response").innerText = "hello";
+    } else {
+        document.getElementById("response").innerText = "请输入 hello";
+    }
+}
+</script>
+
 </body>
 </html>
