@@ -1,29 +1,223 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <title>Hello Interaction</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>miRNA 坐标预测</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    body {
+      margin: 0;
+      background: #f6f8fb;
+      color: #1f2937;
+    }
+    .wrap {
+      max-width: 760px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #d8dee9;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.05);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+    p {
+      line-height: 1.6;
+    }
+    .note {
+      font-size: 14px;
+      color: #4b5563;
+      margin-bottom: 18px;
+    }
+    form {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px 16px;
+    }
+    .full {
+      grid-column: 1 / -1;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input, select, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1px solid #c7d2e0;
+      border-radius: 8px;
+      font-size: 15px;
+      background: #fff;
+    }
+    button {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 14px;
+      font-size: 14px;
+      min-height: 20px;
+      color: #374151;
+    }
+    .result {
+      margin-top: 20px;
+      background: #f8fafc;
+      border: 1px solid #dbe4ee;
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .score {
+      font-size: 36px;
+      font-weight: 700;
+      color: #b91c1c;
+      margin: 6px 0 14px;
+    }
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 16px;
+      font-size: 14px;
+    }
+    .meta div {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    code {
+      font-family: Consolas, Monaco, monospace;
+      word-break: break-all;
+    }
+    .error {
+      color: #b91c1c;
+      font-weight: 600;
+    }
+    @media (max-width: 720px) {
+      form, .meta {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="wrap">
+    <div class="card">
+      <h1>miRNA 坐标预测网页</h1>
+      <p class="note">
+        输入基因组坐标后，后端会严格按你现有 Python 预测逻辑执行：
+        从基因组取序列、按链方向处理、补 1000bp padding、RNAfold、编码，再加载 checkpoint 输出 score。
+        坐标请使用 <strong>1-based 闭区间</strong>。
+      </p>
 
-<h2>输入 hello，系统会回复 hello</h2>
+      <form id="predict-form">
+        <div>
+          <label for="chrom">染色体</label>
+          <input id="chrom" name="chrom" type="text" value="chr1" placeholder="例如 chr1 或 1">
+        </div>
+        <div>
+          <label for="strand">链方向</label>
+          <select id="strand" name="strand">
+            <option value="+">+</option>
+            <option value="-">-</option>
+          </select>
+        </div>
+        <div>
+          <label for="start">起点</label>
+          <input id="start" name="start" type="number" min="1" step="1" value="32801">
+        </div>
+        <div>
+          <label for="end">终点</label>
+          <input id="end" name="end" type="number" min="1" step="1" value="32960">
+        </div>
+        <div class="full">
+          <button id="submit-btn" type="submit">预测 score</button>
+        </div>
+      </form>
 
-<input type="text" id="userInput" placeholder="请输入 hello">
-<button onclick="reply()">发送</button>
+      <div id="status" class="status"></div>
+      <div id="result" class="result" hidden></div>
+    </div>
+  </div>
 
-<p id="response"></p>
+  <script>
+    const form = document.getElementById("predict-form");
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
+    const submitBtn = document.getElementById("submit-btn");
 
-<script>
-function reply() {
-    var input = document.getElementById("userInput").value;
-
-    if (input === "hello") {
-        document.getElementById("response").innerText = "hello";
-    } else {
-        document.getElementById("response").innerText = "请输入 hello";
+    function setStatus(message, isError = false) {
+      statusEl.textContent = message || "";
+      statusEl.className = isError ? "status error" : "status";
     }
-}
-</script>
 
+    function renderResult(data) {
+      resultEl.hidden = false;
+      resultEl.innerHTML = `
+        <div>预测完成</div>
+        <div class="score">${Number(data.score).toFixed(8)}</div>
+        <div class="meta">
+          <div><strong>seq_id</strong><br><code>${data.seq_id}</code></div>
+          <div><strong>MFE</strong><br>${Number(data.mfe).toFixed(6)}</div>
+          <div><strong>original length</strong><br>${data.original_length}</div>
+          <div><strong>upstream / downstream</strong><br>${data.upstream_length} / ${data.downstream_length}</div>
+          <div><strong>padding_size</strong><br>${data.padding_size}</div>
+          <div><strong>premirna_len</strong><br>${data.premirna_len}</div>
+          <div><strong>max_seq_len</strong><br>${data.max_seq_len}</div>
+          <div><strong>use_mfe</strong><br>${data.use_mfe}</div>
+        </div>
+      `;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      resultEl.hidden = true;
+      setStatus("预测中… 首次请求会加载模型和基因组，可能比较慢。");
+      submitBtn.disabled = true;
+
+      const payload = {
+        chrom: document.getElementById("chrom").value.trim(),
+        start: Number(document.getElementById("start").value),
+        end: Number(document.getElementById("end").value),
+        strand: document.getElementById("strand").value
+      };
+
+      try {
+        const response = await fetch("/api/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          throw new Error(data.error || "预测失败");
+        }
+        renderResult(data);
+        setStatus("预测成功。");
+      } catch (error) {
+        setStatus(String(error.message || error), true);
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>
