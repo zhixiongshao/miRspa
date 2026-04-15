@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOST="${HOST:-0.0.0.0}"
 PORT="${PORT:-8765}"
 
-DATA_DIR="${DATA_DIR:-/var/data}"
+DATA_DIR="${DATA_DIR:-/tmp/mirna-web-cache}"
 mkdir -p "${DATA_DIR}"
 
 CHECKPOINT="${CHECKPOINT:-${DATA_DIR}/best_model.pth}"
