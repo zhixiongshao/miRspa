@@ -1,0 +1,17 @@
+#
+# Minimal runtime dependencies for the web predictor (Render/CPU).
+# If you later containerize, you can keep using this file.
+#
+# PyTorch CPU wheels (avoid CUDA on Render).
+--index-url https://download.pytorch.org/whl/cpu
+
+torch
+
+# Back to PyPI for the rest.
+--extra-index-url https://pypi.org/simple
+
+numpy
+tqdm
+
+# Provides `import RNA` (ViennaRNA Python bindings).
+ViennaRNA
