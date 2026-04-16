@@ -959,6 +959,23 @@
           </div>
         </div>
       `;
+      // Trackpad/macOS often sends wheel events that get captured by the outer page.
+      // Ensure the hairpin viewport scrolls when it has overflow.
+      const hairpinCanvas = resultEl.querySelector(".hairpinCanvas");
+      if (hairpinCanvas) {
+        hairpinCanvas.addEventListener(
+          "wheel",
+          (e) => {
+            const el = hairpinCanvas;
+            const canScroll = el.scrollHeight > el.clientHeight + 1;
+            if (!canScroll) return;
+            e.preventDefault();
+            e.stopPropagation();
+            el.scrollTop += e.deltaY;
+          },
+          { passive: false }
+        );
+      }
     }
 
     function setActivePage(page) {
