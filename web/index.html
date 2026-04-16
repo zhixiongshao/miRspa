@@ -28,6 +28,7 @@
       --radius-lg: 22px;
       --blur: 12px;
       --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+      --hairpin-h: clamp(420px, 55vh, 720px);
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -485,6 +486,15 @@
       gap: 14px;
       align-items: stretch;
     }
+    .hairpinCanvas {
+      width: 100%;
+      height: var(--hairpin-h);
+      display: block;
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid color-mix(in srgb, var(--border) 70%, rgba(148, 163, 184, 0.18));
+    }
     .panel {
       background: color-mix(in srgb, var(--card) 92%, transparent);
       border: 1px solid color-mix(in srgb, var(--border) 70%, rgba(148,163,184,0.18));
@@ -664,6 +674,7 @@
       .predictOutput { grid-template-columns: 1fr; }
       .heatWrap { grid-template-columns: 1fr; }
       .heatRing { justify-self: start; }
+      :root { --hairpin-h: clamp(320px, 45vh, 520px); }
     }
   </style>
 </head>
@@ -933,10 +944,7 @@
               <div class="pill" style="padding:5px 10px;">p=${esc((p * 100).toFixed(1))}%</div>
             </div>
             <div class="result" style="margin-top:0;">
-              <div
-                style="width:100%;height:360px;display:block;border-radius:12px;overflow:hidden;background:rgba(255,255,255,0.6);border:1px solid color-mix(in srgb, var(--border) 70%, rgba(148,163,184,0.18));"
-                aria-label="Hairpin diagram"
-              >${data.hairpin_svg || ""}</div>
+              <div class="hairpinCanvas" aria-label="Hairpin diagram">...</div>
               <div class="hint" style="margin-top:10px;">
                 Hairpin diagram is generated on the backend from sequence + dot-bracket structure.
               </div>
