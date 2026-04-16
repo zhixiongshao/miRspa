@@ -492,7 +492,8 @@
       height: var(--hairpin-h);
       display: block;
       border-radius: 12px;
-      overflow: auto;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
       overscroll-behavior: contain;
       scrollbar-gutter: stable;
       -webkit-overflow-scrolling: touch;
@@ -949,7 +950,7 @@
               <div class="pill" style="padding:5px 10px;">p=${esc((p * 100).toFixed(1))}%</div>
             </div>
             <div class="result" style="margin-top:0;">
-              <div class="hairpinCanvas" aria-label="Hairpin diagram" tabindex="0">${data.hairpin_svg || ""}</div>
+              <div class="hairpinCanvas" aria-label="Hairpin diagram" tabindex="0" style="overflow-y:auto;overflow-x:hidden;">${data.hairpin_svg || ""}</div>
               <div class="hint" style="margin-top:10px;">
                 Hairpin diagram is generated on the backend from sequence + dot-bracket structure.
               </div>
