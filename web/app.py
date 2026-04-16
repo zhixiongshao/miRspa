@@ -89,8 +89,8 @@ def render_hairpin_svg(
     *,
     seq: str,
     structure: str,
-    width: int = 520,
-    height: int = 360,
+    width: int = 420,
+    height: int = 760,
 ) -> str:
     """
     Lightweight hairpin diagram from sequence + dot-bracket structure.
